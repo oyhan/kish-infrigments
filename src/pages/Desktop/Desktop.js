@@ -4,11 +4,20 @@ import CamSDK from 'camunda-bpm-sdk-js'
 import { Base64 } from 'js-base64';
 import { MainMenuButton } from '../../components/MainMenuButton';
 import UserProcess from './UserProcess'
-import { Divider, Grid, Typography } from '@material-ui/core';
+import { Divider, Grid, makeStyles, Typography } from '@material-ui/core';
 import { S_IFBLK } from 'constants';
 import UserFinishedProcess from './UserFinishedProcess';
+import { useStyles } from '@material-ui/pickers/views/Calendar/SlideTransition';
 var _ = require('lodash');
 
+
+const desktopStyles = makeStyles((theme)=>({
+
+    
+  desktopBackground : {
+     background: 'red'
+  }
+}))
 
 export default function Desktop() {
 
@@ -51,7 +60,7 @@ export default function Desktop() {
 
     return (
 
-        <div>
+        <div className>
 
 
             {/* <Grid xs={12} md={4} item> <MainMenuButton to="new-fraud" title="ثبت تخلف" />
