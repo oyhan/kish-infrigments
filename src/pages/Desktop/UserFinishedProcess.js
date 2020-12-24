@@ -9,9 +9,20 @@ import TableRow from '@material-ui/core/TableRow';
 import Paper from '@material-ui/core/Paper';
 import { HttpClient } from '../../infrastructure/HttpClient';
 import UserManager from '../../infrastructure/userManager';
-import { Typography } from '@material-ui/core';
+import { IconButton, Typography } from '@material-ui/core';
+import Box from '@material-ui/core/Box';
+import Collapse from '@material-ui/core/Collapse';
+import KeyboardArrowDownIcon from '@material-ui/icons/KeyboardArrowDown';
+import KeyboardArrowUpIcon from '@material-ui/icons/KeyboardArrowUp';
 
 const user = UserManager.Load();
+const useRowStyles = makeStyles({
+    root: {
+        '& > *': {
+            borderBottom: 'unset',
+        },
+    },
+});
 
 const useStyles = makeStyles({
     noData: {
@@ -19,7 +30,7 @@ const useStyles = makeStyles({
         padding: '20px'
     },
     table: {
-        minWidth: 650,
+        // minWidth: 650,
     },
     head: {
 
@@ -31,15 +42,63 @@ function createData(name, calories, fat, carbs, protein) {
     return { name, calories, fat, carbs, protein };
 }
 
-const rows = [
-    createData('Frozen yoghurt', 159, 6.0, 24, 4.0),
-    createData('Ice cream sandwich', 237, 9.0, 37, 4.3),
-    createData('Eclair', 262, 16.0, 24, 6.0),
-    createData('Cupcake', 305, 3.7, 67, 4.3),
-    createData('Gingerbread', 356, 16.0, 49, 3.9),
-];
 
-export default function UserFinishedProcess() {
+
+function Row({ row }) {
+    const [open, setOpen] = React.useState(false);
+    const classes = useRowStyles();
+
+    return (
+        <React.Fragment>
+            <TableRow onClick={() => setOpen(!open)} className={classes.root}>
+                <TableCell>
+                    <IconButton aria-label="expand row" size="small" onClick={() => setOpen(!open)}>
+                        {open ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
+                    </IconButton>
+                </TableCell>
+                <TableCell size='small' component="th" scope="row">
+                    {row.vehicleType}
+                </TableCell>
+                <TableCell  size='small' align="left">{row.fraudDate}</TableCell>
+                <TableCell  size='small' align="left">{row.driverFullname}</TableCell>
+            </TableRow>
+            <TableRow>
+                <TableCell  size='small' style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={6}>
+                    <Collapse in={open} timeout="auto" unmountOnExit>
+                        <Box margin={1}>
+                            <Typography variant="h6" gutterBottom component="div">
+                                تخلفات
+                </Typography>
+                            <Table size="small" aria-label="purchases">
+                                <TableHead>
+                                    <TableRow>
+                                        <TableCell size='small'  >کد تخلف</TableCell>
+                                        <TableCell>مبلغ</TableCell>
+                                        <TableCell >توضیحات</TableCell>
+                                    </TableRow>
+                                </TableHead>
+                                <TableBody>
+                                    {row.frauds.map((fraud, indx) => (
+                                        <TableRow key={indx}>
+                                            <TableCell component="th" scope="row">
+                                                {fraud.fraudCode}
+                                            </TableCell>
+                                            <TableCell>{fraud.fraudCost}</TableCell>
+                                            <TableCell >{fraud.fraudTitle}</TableCell>
+
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </Box>
+                    </Collapse>
+                </TableCell>
+            </TableRow>
+        </React.Fragment>
+    );
+}
+
+export default function UserFinishedProcess({ pdid }) {
     const classes = useStyles();
 
     const [currentProcess, setUserProcess] = useState([]);
@@ -49,35 +108,39 @@ export default function UserFinishedProcess() {
 
 
         var processes = [];
-        HttpClient.Get(`${process.env.REACT_APP_REST_API_ENDPOINT}/engine-rest/history/process-instance?startedby=${user.username}&completed=1`).
+        HttpClient
+            .Get(`${process.env.REACT_APP_REST_API_ENDPOINT}/engine-rest/history/variable-instance?variableName=RequesterModel&processDefinitionId=${pdid}`).
             then(result => {
 
-                result.map(r => {
+                result.filter(f => f.value !== null).map(r => {
+                    
+                    const value = r.value;
+                    const frauds = value.frauds.map(f => f.fraudCode).join();
+                    const vehicleType = value.vehicleType;
+                    const fraudDate = new Date(value.fraudDate).toLocaleDateString("fa-IR");
+                    const durationMilliSeconds = new Date(r.endTime) - new Date(r.startTime);
 
-                    const startDate = new Date(r.startTime).toLocaleString("fa-IR");
-                    const endDate = new Date(r.endTime).toLocaleString("fa-IR");
-                    const durationMilliSeconds = new Date(r.endTime ) - new Date(r.startTime);
-
-                    const seconds = Math.round(durationMilliSeconds / 1000) ;
-                    const minutes = seconds/ 60 ;
-                    const hours = Math.round(minutes/ 60) ;
-                    const days = Math.round(hours / 24) ;
+                    const seconds = Math.round(durationMilliSeconds / 1000);
+                    const minutes = seconds / 60;
+                    const hours = Math.round(minutes / 60);
+                    const days = Math.round(hours / 24);
                     var duration = "";
-                    if (days === 0 && hours ===0){
+                    if (days === 0 && hours === 0) {
                         duration = `${seconds} ثانیه`
-                    }else
-                    if (days === 0 ){
-                        duration = `${hours} ساعت  `
-                    }
-                    else {
-                        duration=  `${days} روز و ${hours} ساعت `
+                    } else
+                        if (days === 0) {
+                            duration = `${hours} ساعت  `
+                        }
+                        else {
+                            duration = `${days} روز و ${hours} ساعت `
 
-                    }
+                        }
                     processes.push({
-                        name: r.processDefinitionName,
-                        start: startDate,
-                        end: endDate,
-                        duration: duration
+                        vehicleType: value.vehicleType,
+                        fraudDate: fraudDate,
+                        driverFullname: `${value.name} ${value.lastName}`,
+                        frauds: value.frauds,
+                        fraudTime: value.fraudTime
 
                     })
 
@@ -91,13 +154,15 @@ export default function UserFinishedProcess() {
 
     return (
         <TableContainer component={Paper}>
-            <Table className={classes.table} aria-label="simple table">
-                <TableHead className={classes.head}>
+            <Table fixedHeader={false} style={{ tableLayout: 'auto' }} className={classes.table} aria-label="simple table">
+                <TableHead  className={classes.head}>
                     <TableRow>
-                        <TableCell>نام فرایند</TableCell>
-                        <TableCell>تاریخ شروع</TableCell>
-                        <TableCell>تاریخ پایان</TableCell>
-                        <TableCell align="left">مدت انجام فرایند</TableCell>
+                        <TableCell></TableCell>
+                        <TableCell>خودرو</TableCell>
+                        <TableCell>تاریخ </TableCell>
+                        {/* <TableCell>زمان</TableCell> */}
+                        <TableCell align="left">راننده</TableCell>
+                        {/* <TableCell align="left">تخلفات ثبت شده</TableCell> */}
 
                     </TableRow>
                 </TableHead>
@@ -114,15 +179,7 @@ export default function UserFinishedProcess() {
 
 
                                 return (
-                                    <TableRow key={row.name}>
-                                        <TableCell component="th" scope="row">
-                                            {row.name}
-                                        </TableCell>
-                                        <TableCell align="left">{row.start}</TableCell>
-                                        <TableCell align="left">{row.end}</TableCell>
-                                        <TableCell align="left">{row.duration}</TableCell>
-
-                                    </TableRow>
+                                   <Row row={row} />
                                 )
                             }
 

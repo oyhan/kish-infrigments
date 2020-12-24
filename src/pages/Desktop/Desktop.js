@@ -56,11 +56,11 @@ export default function Desktop() {
 
             {/* <Grid xs={12} md={4} item> <MainMenuButton to="new-fraud" title="ثبت تخلف" />
             </Grid> */}
-           
+
             {
                 proc.map((p, i) => {
 
-                    return  <MainMenuButton key={i} to="new-fraud" onClick={onclick(p.id)} title="ثبت تخلف" />
+                    return <MainMenuButton key={i} to="new-fraud" onClick={onclick(p.id)} title="ثبت تخلف" />
                 })
             }
 
@@ -72,17 +72,17 @@ export default function Desktop() {
 
                 <UserProcess />
 
-            </Grid>
+            </Grid>*/}
 
-            <Typography  variant='h6' >
-                فرایندهای به اتمام رسیده
+            <Typography variant='h6' >
+                تخلفات ثبت شده
                 </Typography>
-                <Divider />
-            <Grid alignContent='flex-start' item>
+            <Divider />
+            <Grid alignContent='flex-start' xs={12} item>
 
-                <UserFinishedProcess />
+                <UserFinishedProcess pdid={localStorage.getItem("pdid")}/>
 
-            </Grid> */}
+            </Grid>
         </div>
 
     )
