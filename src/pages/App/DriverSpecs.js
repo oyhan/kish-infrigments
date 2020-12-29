@@ -2,6 +2,7 @@ import React from 'react';
 import PersianDatePicker from './PersianDatePicker'
 import { FormControl, FormControlLabel, FormHelperText, FormLabel, Grid, makeStyles, MenuItem, Radio, RadioGroup, TextField } from '@material-ui/core';
 import DriverList from '../../components/SearchDriver/DriverList';
+import ImageUploader from '../../components/Uploader/ImageUploader';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -19,6 +20,7 @@ export default function DriverSpecs({ values, onChange, setFieldValue, formik, d
 
 
   const ondriverSelecte = (driver) => {
+    console.log('driver: ', driver);
 
     if (driver == null) return;
 
@@ -28,14 +30,22 @@ export default function DriverSpecs({ values, onChange, setFieldValue, formik, d
       lastName: driver.driverFamily,
       nationalCode: driver.driverNationalCode,
       vehicleOwnerType: driver.driverOwnerType,
-      mobileNumber : driver.driverPhoneNumber
+      mobileNumber: driver.driverPhoneNumber,
+      drivingLicenseTypeNumber : driver.drivingLicenseNumber,
+      driverId: driver.id
+
     })
 
 
   }
 
+  const receiveImage = (image) => {
 
+    formik.setFieldValue("driverImageBase64", image.src);
 
+  }
+
+console.log('formik.values: ', formik.values);
 
   return (
     <div className={classes.root} autoComplete="off">
@@ -47,6 +57,7 @@ export default function DriverSpecs({ values, onChange, setFieldValue, formik, d
 
         }
 
+        <ImageUploader receiveFiles={receiveImage} />
 
         <TextField fullWidth helperText={formik.errors.name} error={formik.errors.name}
           margin='normal' id="outlined-basic" value={values.name} name="name" label="نام" variant="outlined" onChange={onChange} />

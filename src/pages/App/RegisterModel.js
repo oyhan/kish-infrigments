@@ -23,7 +23,9 @@ var RegisterModel = {
     // fraudOrigin: "",
     // fraudDest: "",
     fraudTime: "",
-    frauds  : []
+    frauds  : [],
+    driverId : "",
+    driverImageBase64 :""
 
 }
 
